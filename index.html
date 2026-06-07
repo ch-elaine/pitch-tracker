@@ -20,7 +20,19 @@
           <span aria-hidden="true">🎙️</span> Pitch Tracker
         </span>
       </div>
-      <div class="navbar-end">
+      <div class="navbar-end gap-1">
+        <!-- Support / donate -->
+        <a
+          href="https://www.paypal.com/donate/?hosted_button_id=KTU3Z5W6TSA7W"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-ghost btn-sm gap-1"
+          aria-label="Support this project with a donation"
+        >
+          <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"/></svg>
+          <span class="hidden sm:inline">Support</span>
+        </a>
+
         <!-- Theme toggle (DaisyUI theme-controller) -->
         <label class="swap swap-rotate btn btn-ghost btn-circle" aria-label="Toggle dark mode">
           <input type="checkbox" class="theme-controller" value="dark" id="theme-toggle" />
@@ -231,8 +243,16 @@
     </main>
 
     <footer class="footer footer-center text-base-content/60 p-4 text-xs">
-      <aside>
+      <aside class="flex flex-col items-center gap-1">
         <p>Pitch Tracker · fully client-side · no data leaves your device</p>
+        <a
+          href="https://www.paypal.com/donate/?hosted_button_id=KTU3Z5W6TSA7W"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link link-hover inline-flex items-center gap-1"
+        >
+          <span aria-hidden="true">❤️</span> Support this project
+        </a>
       </aside>
     </footer>
 

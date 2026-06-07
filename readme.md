@@ -68,6 +68,11 @@ Build with Vite and publish `dist/` to GitHub Pages (a ready-to-use Actions
 workflow is described in the `github-pages-deploy` skill). Set Vite's `base` to
 `/<repo-name>/` for project pages.
 
+## License
+
+Released under the [MIT License](LICENSE). If you find it useful, you can
+[support the project](https://www.paypal.com/donate/?hosted_button_id=KTU3Z5W6TSA7W).
+
 ## Changelog
 
 All notable changes are documented here. Format based on
