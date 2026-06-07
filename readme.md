@@ -21,6 +21,8 @@ hosted for free on **GitHub Pages**.
 - 🕒 Recordings named in **`dd.mm.yyyy-hh:mm:ss`** format.
 - 📱 **Responsive** for mobile and desktop.
 - 🌐 **Fully static** — deployable to GitHub Pages, no server.
+- 📲 **Installable PWA** — works fully offline (service worker precaches the app)
+  and can be installed to the home screen / desktop.
 
 > The gender analysis is a perceptual **acoustic heuristic** (pitch/resonance on a
 > feminine–masculine spectrum). It is **not** a measure of a person's gender identity.
@@ -74,6 +76,13 @@ All notable changes are documented here. Format based on
 ### [Unreleased]
 
 #### Added
+- **2026-06-07** — Progressive Web App. Added `vite-plugin-pwa` (Workbox
+  `generateSW`, `autoUpdate`) with a web app manifest and a service worker that
+  precaches the build output, so the app is installable and works fully offline.
+  Generated an icon set (192/512/maskable + apple-touch) via a zero-dependency
+  Node PNG generator (`npm run icons`) — the icon is the transgender pride flag
+  with indigo "pitch bars" — plus a matching `favicon.svg`. Manifest scope,
+  start_url, and the SW registration all honor the GitHub Pages base path.
 - **2026-06-07** — Reading prompt. A large editable textarea pre-filled with the
   Rainbow Passage (first paragraph) to read aloud while recording; edits persist
   to localStorage and a "Reset to default" button restores the passage.
