@@ -15,6 +15,11 @@ export class ResponsiveCanvas {
     this.resize();
   }
 
+  /** The underlying canvas element (for attaching pointer listeners). */
+  get element(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
   get width(): number {
     return this.cssWidth;
   }

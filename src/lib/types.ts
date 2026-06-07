@@ -1,15 +1,19 @@
 /** Shared interfaces. Keeping contracts narrow lets the controller depend on
  *  abstractions rather than concrete classes (Dependency Inversion). */
 
-/** Continuous voice-character estimate from the recording's pitch statistics. */
+/** Continuous voice-character estimate from the recording's acoustic statistics. */
 export interface GenderResult {
   /** -1 = masculine-typical … 0 = androgynous … +1 = feminine-typical. */
   score: number;
   label: 'Male' | 'Androgynous' | 'Female';
-  /** 0..1 — based on voiced-frame count and pitch dispersion. */
+  /** 0..1 — based on voiced-frame count, pitch dispersion, and F0/formant agreement. */
   confidence: number;
   /** Median fundamental frequency (Hz) across voiced frames. */
   medianF0: number;
+  /** Which signals contributed to the score. */
+  method: 'f0' | 'f0+formants';
+  /** Median formant frequencies (Hz), present when formant analysis succeeded. */
+  formants?: { f1: number; f2: number };
 }
 
 /** A recording persisted in the browser. */

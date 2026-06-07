@@ -11,6 +11,7 @@ import type { PitchDetector } from '../audio/PitchDetector';
 import type { PitchStabilizer } from '../audio/PitchStabilizer';
 import type { VolumeMeter } from '../audio/VolumeMeter';
 import type { GenderAnalyzer } from '../audio/GenderAnalyzer';
+import type { FormantAnalyzer } from '../audio/FormantAnalyzer';
 import type { Mp3Encode, RecordingStore, StoredRecording } from '../lib/types';
 import type { AppState } from './AppState';
 import type { RecorderView } from '../ui/RecorderView';
@@ -28,6 +29,7 @@ export interface RecorderDeps {
   stabilizer: PitchStabilizer;
   volume: VolumeMeter;
   gender: GenderAnalyzer;
+  formant: FormantAnalyzer;
   store: RecordingStore;
   encodeMp3: Mp3Encode;
   state: AppState;
@@ -126,8 +128,9 @@ export class RecorderController {
       return;
     }
 
-    // Score the voice and show the gauge.
-    const gender = this.d.gender.analyze();
+    // Estimate formants (Tier 2) from the recorded clip, then score the voice.
+    const formants = await safe(() => this.d.formant.analyze(result.blob), null);
+    const gender = this.d.gender.analyze(formants);
     if (gender) this.d.gauge.show(gender);
     else this.d.gauge.showInsufficient();
 

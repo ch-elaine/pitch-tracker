@@ -16,6 +16,7 @@ import { PitchDetector } from './audio/PitchDetector';
 import { PitchStabilizer } from './audio/PitchStabilizer';
 import { VolumeMeter } from './audio/VolumeMeter';
 import { GenderAnalyzer } from './audio/GenderAnalyzer';
+import { FormantAnalyzer } from './audio/FormantAnalyzer';
 import { encodeToMp3 } from './audio/Mp3Encoder';
 import { IndexedDbRecordingStore } from './storage/RecordingStore';
 
@@ -47,6 +48,7 @@ function bootstrap(): void {
     stabilizer: new PitchStabilizer(),
     volume: new VolumeMeter(),
     gender: new GenderAnalyzer(),
+    formant: new FormantAnalyzer(),
     store: new IndexedDbRecordingStore(),
     encodeMp3: encodeToMp3,
     state: new AppState(),

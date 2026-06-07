@@ -73,6 +73,19 @@ All notable changes are documented here. Format based on
 
 ### [Unreleased]
 
+#### Added
+- **2026-06-07** — Interactive graphs. Both the pitch and volume graphs now draw
+  Y-axis tick labels (Hz/note for pitch, dBFS for volume) and show a hover
+  crosshair + tooltip reading the exact value at the cursor (reusable
+  `GraphPointer`/`HoverTooltip` helpers).
+- **2026-06-07** — Advanced (Tier 2) voice-character analysis. New
+  `FormantAnalyzer` estimates F1/F2 via LPC (decode → resample to 11 kHz →
+  pre-emphasis → Hamming framing → autocorrelation → Levinson-Durbin → spectral-
+  envelope peak-picking, median across voiced frames). `GenderAnalyzer` blends
+  the formant score with the F0 score (0.6 F0 / 0.4 formant) and factors cue
+  agreement into confidence; the result card now reports F1/F2 and which method
+  was used. Falls back to F0-only when formants can't be extracted.
+
 #### Changed
 - **2026-06-07** — Stabilized the live readouts. Added `PitchStabilizer` (median
   over a short rolling window + a ~200ms "hold" that bridges natural breaths/
@@ -125,7 +138,5 @@ All notable changes are documented here. Format based on
   requirements.
 
 #### Planned
-- Formant (LPC) refinement for voice-character analysis (Tier 2 in the
-  voice-gender-analysis skill); currently F0-median only.
-- Move MP3 encoding to a Web Worker for long recordings.
+- Move MP3 encoding (and LPC formant analysis) to a Web Worker for long recordings.
 - Storage-usage display (`navigator.storage.estimate()`).

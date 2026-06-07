@@ -10,6 +10,7 @@ export class GenderGauge {
   private readonly label = byId('gender-label');
   private readonly f0 = byId('gender-f0');
   private readonly confidence = byId('gender-confidence');
+  private readonly formants = byId('gender-formants');
 
   show(result: GenderResult): void {
     // score -1..+1 -> 0..100% left position
@@ -18,6 +19,9 @@ export class GenderGauge {
     this.label.textContent = result.label;
     this.f0.textContent = String(result.medianF0);
     this.confidence.textContent = `${Math.round(result.confidence * 100)}%`;
+    this.formants.textContent = result.formants
+      ? `Formants F1/F2: ${result.formants.f1} / ${result.formants.f2} Hz · pitch + formant analysis`
+      : 'Pitch-only analysis (formants unavailable for this clip)';
     setVisible(this.card, true);
   }
 
@@ -26,6 +30,7 @@ export class GenderGauge {
     this.label.textContent = 'Not enough voice';
     this.f0.textContent = '—';
     this.confidence.textContent = '—';
+    this.formants.textContent = '';
     setVisible(this.card, true);
   }
 
