@@ -20,11 +20,15 @@ export function initReadingPrompt(): void {
   const textarea = byId<HTMLTextAreaElement>('reading-text');
   const resetBtn = byId<HTMLButtonElement>('reading-reset');
 
-  // Grow the textarea to fit its content so the whole passage is visible
+  // Grow the textarea to fit its content so the whole passage is always visible
   // (the CSS min-height sets the floor; this removes the inner scrollbar).
   const autosize = (): void => {
+    // With border-box, scrollHeight excludes the border — add it back, or the
+    // last line clips under overflow-hidden.
+    const cs = getComputedStyle(textarea);
+    const borders = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
     textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.style.height = `${textarea.scrollHeight + borders}px`;
   };
 
   textarea.value = localStorage.getItem(STORAGE_KEY) ?? DEFAULT_READING_TEXT;
@@ -42,6 +46,14 @@ export function initReadingPrompt(): void {
     textarea.focus();
   });
 
-  // Re-fit when the column width changes (wrapping changes the needed height).
-  window.addEventListener('resize', autosize);
+  // Re-fit whenever the textarea's width changes (responsive layout, rotation,
+  // the two-pane grid engaging) — wrapping changes the height it needs. Guard on
+  // width so our own height changes don't retrigger the observer in a loop.
+  let lastWidth = textarea.clientWidth;
+  new ResizeObserver(() => {
+    if (textarea.clientWidth !== lastWidth) {
+      lastWidth = textarea.clientWidth;
+      autosize();
+    }
+  }).observe(textarea);
 }
