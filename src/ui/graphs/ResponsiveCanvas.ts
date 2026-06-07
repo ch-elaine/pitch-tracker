@@ -16,8 +16,12 @@ export class ResponsiveCanvas {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas context is not available');
     this.ctx = ctx;
-    new ResizeObserver(() => this.resize()).observe(canvas);
-    this.resize();
+    this.resize(); // initial sizing — no onResize (the owner isn't ready yet)
+    // Subsequent resizes fire after construction, so onResize is safe here.
+    new ResizeObserver(() => {
+      this.resize();
+      this.onResize?.();
+    }).observe(canvas);
   }
 
   /** The underlying canvas element (for attaching pointer listeners). */
@@ -45,6 +49,5 @@ export class ResponsiveCanvas {
     this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
     this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS-pixel coordinates
-    this.onResize?.();
   }
 }

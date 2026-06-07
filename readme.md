@@ -129,6 +129,11 @@ All notable changes are documented here. Format based on
   pitch stream so held values don't bias its median.
 
 #### Fixed
+- **2026-06-07** — Recording crash (`this.canvas is undefined`). The graphs'
+  `ResponsiveCanvas` was invoking its `onResize` redraw hook during its own
+  constructor — before the owning graph had finished assigning its `canvas`
+  field. The initial sizing no longer fires `onResize`; only later
+  `ResizeObserver`-driven resizes do (which run after construction completes).
 - **2026-06-07** — iOS home-screen icon. The `apple-touch-icon` is now generated
   as a flattened, opaque RGB PNG (no alpha channel) at 180×180 with an explicit
   `sizes`, so iOS renders it correctly (Android, which uses the manifest icons,
