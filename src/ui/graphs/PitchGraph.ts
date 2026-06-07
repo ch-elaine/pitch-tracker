@@ -17,21 +17,34 @@ export class PitchGraph {
   private readonly pointer: GraphPointer;
   private readonly tooltip: HoverTooltip;
   private readonly values: (number | null)[] = [];
+  /** When true, the whole buffer is scaled to fill the width (preview mode);
+   *  otherwise the buffer scrolls within a fixed CAPACITY window (live mode). */
+  private fitMode = false;
 
   constructor(canvasEl: HTMLCanvasElement, private readonly palette: Palette) {
-    this.canvas = new ResponsiveCanvas(canvasEl);
+    this.canvas = new ResponsiveCanvas(canvasEl, () => this.render());
     const container = canvasEl.parentElement ?? canvasEl;
     this.tooltip = new HoverTooltip(container);
     this.pointer = new GraphPointer(canvasEl, () => this.render());
   }
 
   push(hz: number | null): void {
+    this.fitMode = false;
     this.values.push(hz);
     if (this.values.length > CAPACITY) this.values.shift();
   }
 
+  /** Replace the buffer with a complete series and render it scaled to width. */
+  loadSeries(values: (number | null)[]): void {
+    this.values.length = 0;
+    this.values.push(...values);
+    this.fitMode = true;
+    this.render();
+  }
+
   clear(): void {
     this.values.length = 0;
+    this.fitMode = false;
     this.tooltip.hide();
     this.canvas.clear();
   }
@@ -65,7 +78,7 @@ export class PitchGraph {
     ctx.globalAlpha = 1;
 
     const n = this.values.length;
-    const step = width / (CAPACITY - 1);
+    const step = width / ((this.fitMode ? Math.max(2, n) : CAPACITY) - 1);
 
     if (n >= 2) {
       ctx.strokeStyle = colors.primary;

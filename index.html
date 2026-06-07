@@ -32,6 +32,25 @@
     <main class="mx-auto max-w-6xl px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- ----- Left / primary column ----- -->
       <section class="lg:col-span-2 flex flex-col gap-4">
+        <!-- Reading prompt -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body gap-2">
+            <div class="flex items-center justify-between">
+              <h2 class="card-title text-base">Reading prompt</h2>
+              <button id="reading-reset" type="button" class="btn btn-ghost btn-xs">
+                Reset to default
+              </button>
+            </div>
+            <textarea
+              id="reading-text"
+              class="textarea textarea-bordered w-full min-h-28 text-base leading-relaxed"
+              aria-label="Reading prompt text"
+              spellcheck="false"
+            ></textarea>
+            <p class="text-xs opacity-60">Read this aloud while recording. Your edits are saved automatically.</p>
+          </div>
+        </div>
+
         <!-- Recorder controls -->
         <div class="card bg-base-100 shadow-sm">
           <div class="card-body items-center text-center gap-4">

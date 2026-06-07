@@ -5,6 +5,7 @@
 import './style.css';
 
 import { initThemeToggle } from './ui/theme';
+import { initReadingPrompt } from './ui/ReadingPrompt';
 import { showAlert } from './ui/alerts';
 import { byId } from './lib/dom';
 
@@ -17,6 +18,7 @@ import { PitchStabilizer } from './audio/PitchStabilizer';
 import { VolumeMeter } from './audio/VolumeMeter';
 import { GenderAnalyzer } from './audio/GenderAnalyzer';
 import { FormantAnalyzer } from './audio/FormantAnalyzer';
+import { OfflineAnalyzer } from './audio/OfflineAnalyzer';
 import { encodeToMp3 } from './audio/Mp3Encoder';
 import { IndexedDbRecordingStore } from './storage/RecordingStore';
 
@@ -30,15 +32,18 @@ import { GenderDetails } from './ui/graphs/GenderDetails';
 
 function bootstrap(): void {
   initThemeToggle();
+  initReadingPrompt();
 
   const palette = new Palette();
   const capture = new AudioCapture();
   const view = new RecorderView();
+  const formant = new FormantAnalyzer();
 
   // `list` and `controller` reference each other; the handlers defer to the
   // controller, which is constructed immediately after. Explicit annotations
   // break the type-inference cycle.
   const list: RecordingsList = new RecordingsList({
+    onPreview: (id) => controller.preview(id),
     onDownload: (id) => controller.download(id),
     onDelete: (id) => controller.remove(id),
   });
@@ -49,7 +54,8 @@ function bootstrap(): void {
     stabilizer: new PitchStabilizer(),
     volume: new VolumeMeter(),
     gender: new GenderAnalyzer(),
-    formant: new FormantAnalyzer(),
+    formant,
+    offline: new OfflineAnalyzer(formant),
     store: new IndexedDbRecordingStore(),
     encodeMp3: encodeToMp3,
     state: new AppState(),

@@ -74,6 +74,18 @@ All notable changes are documented here. Format based on
 ### [Unreleased]
 
 #### Added
+- **2026-06-07** — Reading prompt. A large editable textarea pre-filled with the
+  Rainbow Passage (first paragraph) to read aloud while recording; edits persist
+  to localStorage and a "Reset to default" button restores the passage.
+- **2026-06-07** — Preview saved recordings. Each recording in the list gained a
+  "Preview" button that re-analyzes the stored clip and loads it back into the
+  whole page — pitch graph, volume graph, voice-character gauge, the transparency
+  panel, and the summary readouts. Rather than persisting per-frame data, an
+  `OfflineAnalyzer` decodes the blob and re-runs the same pitch/volume/gender
+  pipeline frame-by-frame (the audio file stays the source of truth, storage
+  stays lean). The pitch/volume graphs gained a fit-to-width `loadSeries()` mode
+  so a full clip is shown scaled to the canvas instead of the live scrolling
+  window.
 - **2026-06-07** — Voice-analysis transparency panel. The result card gained a
   "How this was calculated" section (`GenderDetails`) with three graphs showing
   the actual inputs to the estimate: (1) a pitch-distribution histogram of every

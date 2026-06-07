@@ -7,6 +7,8 @@ import { formatElapsed } from '../lib/time';
 import type { StoredRecording } from '../lib/types';
 
 export interface RecordingHandlers {
+  /** Re-analyze the clip and load it into the page graphs; spinner until done. */
+  onPreview(id: string): Promise<void>;
   /** Encode + download as MP3; the view shows a spinner until it resolves. */
   onDownload(id: string): Promise<void>;
   onDelete(id: string): Promise<void>;
@@ -80,6 +82,16 @@ export class RecordingsList {
     // Actions.
     const actions = document.createElement('div');
     actions.className = 'join self-end';
+
+    const previewBtn = document.createElement('button');
+    previewBtn.type = 'button';
+    previewBtn.className = 'btn btn-sm btn-secondary join-item';
+    previewBtn.textContent = 'Preview';
+    previewBtn.setAttribute('aria-label', `Preview ${rec.name} in the graphs`);
+    previewBtn.addEventListener('click', () => {
+      void this.withLoading(previewBtn, () => this.handlers.onPreview(rec.id));
+    });
+    actions.appendChild(previewBtn);
 
     const downloadBtn = document.createElement('button');
     downloadBtn.type = 'button';

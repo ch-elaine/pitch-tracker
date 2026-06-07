@@ -10,8 +10,10 @@ import { CaptureError } from '../audio/AudioCapture';
 import type { PitchDetector } from '../audio/PitchDetector';
 import type { PitchStabilizer } from '../audio/PitchStabilizer';
 import type { VolumeMeter } from '../audio/VolumeMeter';
+import { dbToPercent } from '../audio/VolumeMeter';
 import type { GenderAnalyzer } from '../audio/GenderAnalyzer';
 import type { FormantAnalyzer } from '../audio/FormantAnalyzer';
+import type { OfflineAnalyzer } from '../audio/OfflineAnalyzer';
 import type { GenderResult, Mp3Encode, RecordingStore, StoredRecording } from '../lib/types';
 import type { AppState } from './AppState';
 import type { RecorderView } from '../ui/RecorderView';
@@ -31,6 +33,7 @@ export interface RecorderDeps {
   volume: VolumeMeter;
   gender: GenderAnalyzer;
   formant: FormantAnalyzer;
+  offline: OfflineAnalyzer;
   store: RecordingStore;
   encodeMp3: Mp3Encode;
   state: AppState;
@@ -179,6 +182,39 @@ export class RecorderController {
     } catch {
       this.d.notify('Could not encode this recording to MP3.', 'error');
     }
+  }
+
+  /** Re-analyze a stored recording and load its data into the whole page. */
+  async preview(id: string): Promise<void> {
+    // Don't disturb an in-progress capture.
+    if (this.d.state.current !== 'idle' && this.d.state.current !== 'done') return;
+
+    const rec = await this.d.store.get(id);
+    if (!rec) return;
+
+    const data = await safe(() => this.d.offline.analyze(rec.blob), null);
+    if (!data) {
+      this.d.notify('Could not analyze this recording.', 'error');
+      return;
+    }
+
+    this.d.pitchGraph.loadSeries(data.pitch);
+    this.d.volumeGraph.loadSeries(data.volume);
+
+    if (data.gender) {
+      this.d.gauge.show(data.gender);
+      this.d.details.show(data.gender);
+      this.d.view.updatePitch(data.gender.medianF0, hzToNoteName(data.gender.medianF0));
+    } else {
+      this.d.gauge.showInsufficient();
+      this.d.details.hide();
+      this.d.view.updatePitch(null, null);
+    }
+
+    this.d.view.updateTime(rec.durationMs);
+    this.d.view.updateVolume(data.medianDb, dbToPercent(data.medianDb));
+    this.d.view.setStatus(`Previewing ${rec.name}`);
+    this.d.state.set('done');
   }
 
   async remove(id: string): Promise<void> {

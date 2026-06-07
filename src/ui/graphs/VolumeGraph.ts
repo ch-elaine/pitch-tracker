@@ -16,22 +16,36 @@ export class VolumeGraph {
   private readonly pointer: GraphPointer;
   private readonly tooltip: HoverTooltip;
   private readonly values: number[] = [];
+  /** See PitchGraph: fit-to-width for preview vs. scrolling window for live. */
+  private fitMode = false;
 
   constructor(canvasEl: HTMLCanvasElement, private readonly palette: Palette) {
-    this.canvas = new ResponsiveCanvas(canvasEl);
+    this.canvas = new ResponsiveCanvas(canvasEl, () => this.render());
     const container = canvasEl.parentElement ?? canvasEl;
     this.tooltip = new HoverTooltip(container);
     this.pointer = new GraphPointer(canvasEl, () => this.render());
   }
 
   push(db: number): void {
+    this.fitMode = false;
     const clamped = Number.isFinite(db) ? Math.max(FLOOR_DB, Math.min(CEIL_DB, db)) : FLOOR_DB;
     this.values.push(clamped);
     if (this.values.length > CAPACITY) this.values.shift();
   }
 
+  /** Replace the buffer with a complete series and render it scaled to width. */
+  loadSeries(values: number[]): void {
+    this.values.length = 0;
+    for (const db of values) {
+      this.values.push(Number.isFinite(db) ? Math.max(FLOOR_DB, Math.min(CEIL_DB, db)) : FLOOR_DB);
+    }
+    this.fitMode = true;
+    this.render();
+  }
+
   clear(): void {
     this.values.length = 0;
+    this.fitMode = false;
     this.tooltip.hide();
     this.canvas.clear();
   }
@@ -64,7 +78,7 @@ export class VolumeGraph {
     ctx.globalAlpha = 1;
 
     const n = this.values.length;
-    const step = width / (CAPACITY - 1);
+    const step = width / ((this.fitMode ? Math.max(2, n) : CAPACITY) - 1);
 
     if (n >= 2) {
       ctx.beginPath();
