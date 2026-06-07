@@ -43,6 +43,9 @@ export class AudioCapture {
   private recorder: MediaRecorder | undefined;
   private chunks: Blob[] = [];
   private startedAt = 0;
+  /** The mimeType we requested; the authoritative fallback when the recorder
+   *  reports an empty `mimeType` (some iOS/WebKit versions do). */
+  private requestedMime: string | undefined;
 
   /** Effective sample rate of the capture graph (falls back to 44.1k pre-start). */
   get sampleRate(): number {
@@ -78,16 +81,21 @@ export class AudioCapture {
     source.connect(this.analyser);
     // Intentionally NOT connected to ctx.destination — avoids echoing mic to speakers.
 
-    const mimeType = pickMimeType();
+    this.requestedMime = pickMimeType();
     this.recorder = new MediaRecorder(
       this.stream,
-      mimeType ? { mimeType } : undefined,
+      this.requestedMime ? { mimeType: this.requestedMime } : undefined,
     );
     this.chunks = [];
     this.recorder.ondataavailable = (e) => {
       if (e.data.size > 0) this.chunks.push(e.data);
     };
-    this.recorder.start(100); // emit chunks every 100ms
+    // No timeslice: a single, fully-finalized file is emitted on stop(). Passing a
+    // timeslice makes iOS/WebKit produce a *fragmented* mp4 whose concatenated chunks
+    // have no top-level moov atom — unplayable once stored and re-loaded (both the
+    // <audio> element and decodeAudioData error out). Nothing consumes intermediate
+    // chunks here; live analysis reads the AnalyserNode, not the recorder.
+    this.recorder.start();
     this.startedAt = performance.now();
   }
 
@@ -109,9 +117,12 @@ export class AudioCapture {
         reject(new Error('stop() called while not recording'));
         return;
       }
-      const mimeType = recorder.mimeType || 'audio/webm';
       const durationMs = this.elapsedMs();
       recorder.onstop = () => {
+        // Prefer what the recorder reports; fall back to the requested type, then
+        // the chunk's own type, then webm. iOS sometimes leaves `mimeType` blank.
+        const mimeType =
+          recorder.mimeType || this.requestedMime || this.chunks[0]?.type || 'audio/webm';
         const blob = new Blob(this.chunks, { type: mimeType });
         // WebM from MediaRecorder lacks duration metadata, which breaks the
         // playback seek bar; write the real duration into the header at the
