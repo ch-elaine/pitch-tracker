@@ -74,6 +74,24 @@ All notable changes are documented here. Format based on
 ### [Unreleased]
 
 #### Added
+- **2026-06-07** — Recording & analysis functionality (the full audio pipeline).
+  - `AudioCapture`: `getUserMedia` (echo-cancel/noise-suppress/AGC disabled for
+    accurate measurement) + Web Audio `AnalyserNode` + `MediaRecorder` with
+    container feature-detection, plus strict lifecycle cleanup and typed
+    `CaptureError`s (denied / no-device / busy / insecure).
+  - `PitchDetector` (McLeod Pitch Method via `pitchy`, clarity-gated, voice-band
+    clamped), `VolumeMeter` (RMS→dBFS, smoothing, clipping detection), and
+    `GenderAnalyzer` (median-F0 → continuous masculine↔feminine score + label +
+    confidence).
+  - Live, theme-aware canvas graphs: `PitchGraph` (log-frequency, gapped on
+    unvoiced frames, octave gridlines) and `VolumeGraph` (dBFS area), both DPR-
+    aware via `ResponsiveCanvas`; single rAF loop in `RecorderController`.
+  - `IndexedDbRecordingStore` (Blob persistence via `idb`) and `Mp3Encoder`
+    (decode → PCM → `@breezystack/lamejs`) with client-side download named
+    `dd.mm.yyyy-hh:mm:ss.mp3`.
+  - `RecordingsList` view (inline playback, MP3 download with spinner, delete),
+    `GenderGauge` result card, and an `AppState` lifecycle machine wiring it all
+    through `RecorderController` (dependency-injected in `main.ts`).
 - **2026-06-07** — UI shell, build tooling & deployment.
   - Vite + TypeScript (strict) project scaffold with TailwindCSS 4 + DaisyUI 5
     (CSS-based config, light/dark themes).
@@ -94,8 +112,7 @@ All notable changes are documented here. Format based on
   requirements.
 
 #### Planned
-- Audio capture (`getUserMedia` + Web Audio graph + MediaRecorder) replacing the
-  placeholder recorder stub.
-- Live pitch + volume graph rendering on the canvases.
-- Post-recording gender spectrum analysis feeding the voice-character card.
-- IndexedDB recordings list with MP3 download (`dd.mm.yyyy-hh:mm:ss` naming).
+- Formant (LPC) refinement for voice-character analysis (Tier 2 in the
+  voice-gender-analysis skill); currently F0-median only.
+- Move MP3 encoding to a Web Worker for long recordings.
+- Storage-usage display (`navigator.storage.estimate()`).

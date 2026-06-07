@@ -14,6 +14,8 @@ function resolveInitialTheme(): Theme {
 
 function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme);
+  // Let theme-aware canvas graphs re-read their colors.
+  window.dispatchEvent(new Event('themechange'));
 }
 
 export function initThemeToggle(): void {

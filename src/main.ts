@@ -1,39 +1,64 @@
-/** Composition root: wires UI modules together. Business/audio logic is added
- *  in later milestones (see .claude/skills/* playbooks) — for now this boots the
- *  shell and a placeholder recording timer so the UI is verifiable. */
+/** Composition root: constructs concrete implementations and wires them into the
+ *  controller. This is the only place that knows about concrete classes — every
+ *  module otherwise depends on the interfaces in lib/types.ts. */
 
 import './style.css';
+
 import { initThemeToggle } from './ui/theme';
 import { showAlert } from './ui/alerts';
-import { RecorderView, type RecorderState } from './ui/RecorderView';
+import { byId } from './lib/dom';
+
+import { AppState } from './app/AppState';
+import { RecorderController } from './app/RecorderController';
+
+import { AudioCapture } from './audio/AudioCapture';
+import { PitchDetector } from './audio/PitchDetector';
+import { VolumeMeter } from './audio/VolumeMeter';
+import { GenderAnalyzer } from './audio/GenderAnalyzer';
+import { encodeToMp3 } from './audio/Mp3Encoder';
+import { IndexedDbRecordingStore } from './storage/RecordingStore';
+
+import { RecorderView } from './ui/RecorderView';
+import { RecordingsList } from './ui/RecordingsList';
+import { Palette } from './ui/graphs/palette';
+import { PitchGraph } from './ui/graphs/PitchGraph';
+import { VolumeGraph } from './ui/graphs/VolumeGraph';
+import { GenderGauge } from './ui/graphs/GenderGauge';
 
 function bootstrap(): void {
   initThemeToggle();
 
-  // --- Placeholder recorder wiring -----------------------------------------
-  // TODO(audio): replace this stub with RecorderController once AudioCapture,
-  // PitchDetector, and VolumeMeter land. It only exercises the view's states.
-  let state: RecorderState = 'idle';
-  let timer: number | undefined;
-  let startedAt = 0;
+  const palette = new Palette();
+  const capture = new AudioCapture();
+  const view = new RecorderView();
 
-  const view = new RecorderView(() => {
-    if (state === 'idle') {
-      state = 'recording';
-      startedAt = performance.now();
-      view.setState('recording');
-      timer = window.setInterval(() => view.updateTime(performance.now() - startedAt), 200);
-      showAlert('Audio capture is not wired up yet — this is the UI shell.', 'info');
-    } else {
-      state = 'idle';
-      view.setState('idle');
-      if (timer) window.clearInterval(timer);
-      view.resetLive();
-    }
+  // `list` and `controller` reference each other; the handlers defer to the
+  // controller, which is constructed immediately after. Explicit annotations
+  // break the type-inference cycle.
+  const list: RecordingsList = new RecordingsList({
+    onDownload: (id) => controller.download(id),
+    onDelete: (id) => controller.remove(id),
+  });
+
+  const controller: RecorderController = new RecorderController({
+    capture,
+    pitch: new PitchDetector(capture.fftSize),
+    volume: new VolumeMeter(),
+    gender: new GenderAnalyzer(),
+    store: new IndexedDbRecordingStore(),
+    encodeMp3: encodeToMp3,
+    state: new AppState(),
+    view,
+    pitchGraph: new PitchGraph(byId<HTMLCanvasElement>('pitch-canvas'), palette),
+    volumeGraph: new VolumeGraph(byId<HTMLCanvasElement>('volume-canvas'), palette),
+    gauge: new GenderGauge(),
+    list,
+    notify: showAlert,
   });
 
   view.setState('idle');
   view.resetLive();
+  void controller.init();
 }
 
 bootstrap();

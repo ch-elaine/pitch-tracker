@@ -18,8 +18,9 @@ export class RecorderView {
   private readonly statVolume = byId('stat-volume');
   private readonly volumeMeter = byId('volume-meter');
 
-  constructor(private readonly onToggle: () => void) {
-    this.btn.addEventListener('click', () => this.onToggle());
+  /** Register the handler fired when the record button is pressed. */
+  bindToggle(handler: () => void): void {
+    this.btn.addEventListener('click', handler);
   }
 
   setState(state: RecorderState): void {
@@ -47,10 +48,13 @@ export class RecorderView {
     this.statNote.textContent = note ?? 'no note';
   }
 
-  updateVolume(db: number | null, percent: number): void {
+  updateVolume(db: number | null, percent: number, clipping = false): void {
     this.statVolume.textContent = db === null ? '—' : `${Math.round(db)}`;
     this.volumeMeter.style.setProperty('--value', String(Math.round(percent)));
     this.volumeMeter.textContent = `${Math.round(percent)}%`;
+    const color = clipping ? 'text-error' : percent > 85 ? 'text-warning' : 'text-primary';
+    this.volumeMeter.classList.remove('text-error', 'text-warning', 'text-primary');
+    this.volumeMeter.classList.add(color);
   }
 
   /** Reset live readouts back to the idle placeholder values. */
