@@ -38,18 +38,29 @@ function chunk(type, data) {
   crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
   return Buffer.concat([len, typeBuf, data, crc]);
 }
-function encodePng(width, height, rgba) {
+/** Encode RGBA pixels to PNG. When `alpha` is false the image is written as
+ *  opaque RGB (color type 2, no alpha channel) — iOS home-screen icons must not
+ *  carry transparency, or they can render with a black/odd background. */
+function encodePng(width, height, rgba, alpha = true) {
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const channels = alpha ? 4 : 3;
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
   ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // color type RGBA
-  const stride = width * 4;
+  ihdr[9] = alpha ? 6 : 2; // color type: RGBA or RGB
+  const stride = width * channels;
   const raw = Buffer.alloc((stride + 1) * height);
   for (let y = 0; y < height; y++) {
     raw[y * (stride + 1)] = 0; // filter: none
-    rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
+    for (let x = 0; x < width; x++) {
+      const src = (y * width + x) * 4;
+      const dst = y * (stride + 1) + 1 + x * channels;
+      raw[dst] = rgba[src];
+      raw[dst + 1] = rgba[src + 1];
+      raw[dst + 2] = rgba[src + 2];
+      if (alpha) raw[dst + 3] = rgba[src + 3];
+    }
   }
   const idat = zlib.deflateSync(raw, { level: 9 });
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))]);
@@ -95,7 +106,7 @@ function renderIcon(size, pad) {
     const by = y0 + (inner - barH) / 2;
     fillRect(bx, by, barW, barH, BAR);
   }
-  return encodePng(size, size, rgba);
+  return rgba; // raw RGBA pixels; the caller encodes (with/without alpha)
 }
 
 // ---- output ---------------------------------------------------------------
@@ -104,9 +115,11 @@ const targets = [
   { name: 'icon-192.png', size: 192, pad: 0.16 },
   { name: 'icon-512.png', size: 512, pad: 0.16 },
   { name: 'maskable-512.png', size: 512, pad: 0.22 }, // extra safe-zone padding
-  { name: 'apple-touch-icon.png', size: 180, pad: 0.16 },
+  // iOS home-screen icon: opaque (no alpha) so it renders correctly.
+  { name: 'apple-touch-icon.png', size: 180, pad: 0.16, alpha: false },
 ];
 for (const t of targets) {
-  writeFileSync(join(OUT_DIR, t.name), renderIcon(t.size, t.pad));
-  console.log(`wrote icons/${t.name} (${t.size}x${t.size})`);
+  const png = encodePng(t.size, t.size, renderIcon(t.size, t.pad), t.alpha !== false);
+  writeFileSync(join(OUT_DIR, t.name), png);
+  console.log(`wrote icons/${t.name} (${t.size}x${t.size}, ${t.alpha === false ? 'RGB' : 'RGBA'})`);
 }

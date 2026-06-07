@@ -20,15 +20,28 @@ export function initReadingPrompt(): void {
   const textarea = byId<HTMLTextAreaElement>('reading-text');
   const resetBtn = byId<HTMLButtonElement>('reading-reset');
 
+  // Grow the textarea to fit its content so the whole passage is visible
+  // (the CSS min-height sets the floor; this removes the inner scrollbar).
+  const autosize = (): void => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
   textarea.value = localStorage.getItem(STORAGE_KEY) ?? DEFAULT_READING_TEXT;
+  autosize();
 
   textarea.addEventListener('input', () => {
     localStorage.setItem(STORAGE_KEY, textarea.value);
+    autosize();
   });
 
   resetBtn.addEventListener('click', () => {
     textarea.value = DEFAULT_READING_TEXT;
     localStorage.removeItem(STORAGE_KEY);
+    autosize();
     textarea.focus();
   });
+
+  // Re-fit when the column width changes (wrapping changes the needed height).
+  window.addEventListener('resize', autosize);
 }

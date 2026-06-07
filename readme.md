@@ -119,6 +119,8 @@ All notable changes are documented here. Format based on
   was used. Falls back to F0-only when formants can't be extracted.
 
 #### Changed
+- **2026-06-07** — Reading prompt textarea is taller and auto-grows to fit its
+  content, so the full Rainbow Passage is visible without an inner scrollbar.
 - **2026-06-07** — Stabilized the live readouts. Added `PitchStabilizer` (median
   over a short rolling window + a ~200ms "hold" that bridges natural breaths/
   pauses so the pitch no longer blanks mid-speech), and throttled the numeric
@@ -127,6 +129,11 @@ All notable changes are documented here. Format based on
   pitch stream so held values don't bias its median.
 
 #### Fixed
+- **2026-06-07** — iOS home-screen icon. The `apple-touch-icon` is now generated
+  as a flattened, opaque RGB PNG (no alpha channel) at 180×180 with an explicit
+  `sizes`, so iOS renders it correctly (Android, which uses the manifest icons,
+  was already fine). Note: if you previously added the app to your iOS home
+  screen, remove and re-add it to pick up the new icon.
 - **2026-06-07** — Clipped graph axis labels. The lowest (and highest) Y-axis
   labels on the pitch/volume graphs were drawn at the canvas edge and got cut
   off; the plot area is now inset with small top/bottom padding so every gridline
