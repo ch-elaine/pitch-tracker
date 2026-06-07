@@ -118,6 +118,10 @@ All notable changes are documented here. Format based on
   pitch stream so held values don't bias its median.
 
 #### Fixed
+- **2026-06-07** — Clipped graph axis labels. The lowest (and highest) Y-axis
+  labels on the pitch/volume graphs were drawn at the canvas edge and got cut
+  off; the plot area is now inset with small top/bottom padding so every gridline
+  label is fully visible.
 - **2026-06-07** — Recording playback seek bar. `MediaRecorder` WebM/Opus blobs
   ship with no duration in their header, breaking the native `<audio>` progress
   bar. The real duration is now written into the WebM header at capture time

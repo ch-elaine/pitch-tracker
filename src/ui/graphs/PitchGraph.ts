@@ -11,6 +11,9 @@ import { midiToHz, hzToNoteName } from '../../lib/notes';
 const MIN_HZ = 65; // ~C2
 const MAX_HZ = 1000;
 const CAPACITY = 600; // scrolling window length in frames
+// Vertical insets so the extreme gridlines and their labels aren't clipped.
+const PAD_TOP = 9;
+const PAD_BOTTOM = 12;
 
 export class PitchGraph {
   private readonly canvas: ResponsiveCanvas;
@@ -51,7 +54,8 @@ export class PitchGraph {
 
   private yForHz(hz: number): number {
     const t = (Math.log2(hz) - Math.log2(MIN_HZ)) / (Math.log2(MAX_HZ) - Math.log2(MIN_HZ));
-    return this.canvas.height * (1 - Math.max(0, Math.min(1, t)));
+    const usable = Math.max(1, this.canvas.height - PAD_TOP - PAD_BOTTOM);
+    return PAD_TOP + usable * (1 - Math.max(0, Math.min(1, t)));
   }
 
   render(): void {

@@ -10,6 +10,9 @@ const FLOOR_DB = -60;
 const CEIL_DB = 0;
 const CAPACITY = 600;
 const GRID_DB = [0, -20, -40, -60];
+// Vertical insets so the top/bottom gridline labels aren't clipped.
+const PAD_TOP = 9;
+const PAD_BOTTOM = 12;
 
 export class VolumeGraph {
   private readonly canvas: ResponsiveCanvas;
@@ -52,7 +55,8 @@ export class VolumeGraph {
 
   private yForDb(db: number): number {
     const t = (db - FLOOR_DB) / (CEIL_DB - FLOOR_DB);
-    return this.canvas.height * (1 - Math.max(0, Math.min(1, t)));
+    const usable = Math.max(1, this.canvas.height - PAD_TOP - PAD_BOTTOM);
+    return PAD_TOP + usable * (1 - Math.max(0, Math.min(1, t)));
   }
 
   render(): void {
