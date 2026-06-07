@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
+    "fix-webm-duration": "^1.0.6",
     "idb": "^8.0.3",
     "pitchy": "^4.1.0"
   }

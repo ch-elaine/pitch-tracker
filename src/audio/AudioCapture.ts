@@ -2,6 +2,8 @@
  *  Produces per-frame time-domain data for analysis and the final recorded blob.
  *  No DOM, no DSP — just capture plumbing and lifecycle (see audio-capture skill). */
 
+import fixWebmDuration from 'fix-webm-duration';
+
 export interface CaptureResult {
   blob: Blob;
   mimeType: string;
@@ -110,7 +112,17 @@ export class AudioCapture {
       const mimeType = recorder.mimeType || 'audio/webm';
       const durationMs = this.elapsedMs();
       recorder.onstop = () => {
-        resolve({ blob: new Blob(this.chunks, { type: mimeType }), mimeType, durationMs });
+        const blob = new Blob(this.chunks, { type: mimeType });
+        // WebM from MediaRecorder lacks duration metadata, which breaks the
+        // playback seek bar; write the real duration into the header at the
+        // source so every consumer (player, storage, MP3) sees a correct file.
+        if (mimeType.includes('webm')) {
+          fixWebmDuration(blob, durationMs)
+            .then((fixed) => resolve({ blob: fixed, mimeType, durationMs }))
+            .catch(() => resolve({ blob, mimeType, durationMs }));
+        } else {
+          resolve({ blob, mimeType, durationMs });
+        }
       };
       recorder.stop();
     });

@@ -107,8 +107,11 @@ All notable changes are documented here. Format based on
 
 #### Fixed
 - **2026-06-07** — Recording playback seek bar. `MediaRecorder` WebM/Opus blobs
-  report `duration: Infinity`, breaking the native `<audio>` progress bar; the
-  list now forces the browser to compute the real duration on metadata load.
+  ship with no duration in their header, breaking the native `<audio>` progress
+  bar. The real duration is now written into the WebM header at capture time
+  (`fix-webm-duration`), so the seek bar is correct everywhere. This replaces the
+  earlier client-side seek-to-end workaround, which made the bar flash to full
+  when playback began (the forced seek couldn't resolve until media data loaded).
 
 #### Added
 - **2026-06-07** — Recording & analysis functionality (the full audio pipeline).
