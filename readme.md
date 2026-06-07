@@ -74,6 +74,17 @@ All notable changes are documented here. Format based on
 ### [Unreleased]
 
 #### Added
+- **2026-06-07** — Voice-analysis transparency panel. The result card gained a
+  "How this was calculated" section (`GenderDetails`) with three graphs showing
+  the actual inputs to the estimate: (1) a pitch-distribution histogram of every
+  voiced frame, colored by the male/androgynous/female bands with the median
+  marked; (2) the measured F1/F2 plotted against the masculine→feminine
+  reference ranges; (3) a score breakdown showing the F0 sub-score, formant
+  sub-score, their weights, and the blended result on one −1…+1 axis. All
+  scoring constants/functions were extracted to `genderModel.ts` as a single
+  source of truth so the graphs and the math can't diverge. `ResponsiveCanvas`
+  now redraws on resize (so the canvases render correctly when the collapsed
+  panel is expanded).
 - **2026-06-07** — Interactive graphs. Both the pitch and volume graphs now draw
   Y-axis tick labels (Hz/note for pitch, dBFS for volume) and show a hover
   crosshair + tooltip reading the exact value at the cursor (reusable

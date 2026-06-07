@@ -1,29 +1,17 @@
 /** Accumulates voiced F0 values during a recording, then scores the voice on a
- *  continuous masculine↔androgynous↔feminine spectrum from the median pitch.
+ *  continuous masculine↔androgynous↔feminine spectrum, optionally blending in a
+ *  formant (Tier 2) estimate. The scoring model lives in genderModel.ts so the
+ *  transparency graphs render the exact same math.
  *
- *  This is a perceptual ACOUSTIC heuristic (Tier 1: F0 median) — not a
- *  determination of gender identity. Formant (LPC) refinement is a future
- *  enhancement noted in the voice-gender-analysis skill. */
+ *  This is a perceptual ACOUSTIC heuristic — not a determination of gender
+ *  identity (see the voice-gender-analysis skill). */
 
 import type { GenderResult } from '../lib/types';
 import type { FormantEstimate } from './FormantAnalyzer';
+import { GENDER_MODEL, f0ToScore, formantsToScore, scoreToLabel } from './genderModel';
 
-/** Hz center of the androgynous band; F0 tails saturate toward male/female. */
-const ANDROGYNOUS_CENTER = 170;
-/** Logistic spread (Hz) controlling how quickly the score saturates. */
-const SCORE_SPREAD = 35;
-/** |score| below this reads as androgynous. */
-const ANDROGYNOUS_BAND = 0.33;
 /** Minimum voiced frames before a result is meaningful. */
 const MIN_VOICED_FRAMES = 12;
-
-/** Weight of the F0 score vs. the formant score when both are available. */
-const F0_WEIGHT = 0.6;
-/** Formant centers/spreads (Hz) roughly midway between adult male/female means. */
-const F1_CENTER = 600;
-const F1_SPREAD = 120;
-const F2_CENTER = 1650;
-const F2_SPREAD = 350;
 
 export class GenderAnalyzer {
   private readonly f0s: number[] = [];
@@ -48,22 +36,20 @@ export class GenderAnalyzer {
     const median = percentile(sorted, 0.5);
     const iqr = percentile(sorted, 0.75) - percentile(sorted, 0.25);
 
-    const f0Score = Math.tanh((median - ANDROGYNOUS_CENTER) / SCORE_SPREAD);
+    const f0Score = f0ToScore(median);
 
     // Blend in the formant score when available (higher F1/F2 ⇒ more feminine).
     let score = f0Score;
+    let formantScore: number | undefined;
     let method: GenderResult['method'] = 'f0';
     let agreementConfidence = 1;
     if (formants) {
-      const formantScore = scoreFormants(formants);
-      score = F0_WEIGHT * f0Score + (1 - F0_WEIGHT) * formantScore;
+      formantScore = formantsToScore(formants.f1, formants.f2);
+      score = GENDER_MODEL.f0Weight * f0Score + (1 - GENDER_MODEL.f0Weight) * formantScore;
       method = 'f0+formants';
       // The two cues agreeing is itself evidence; disagreement lowers confidence.
       agreementConfidence = 1 - Math.abs(f0Score - formantScore) / 2;
     }
-
-    const label: GenderResult['label'] =
-      score < -ANDROGYNOUS_BAND ? 'Male' : score > ANDROGYNOUS_BAND ? 'Female' : 'Androgynous';
 
     // Confidence: more voiced frames, tighter pitch spread, and cue agreement.
     const countConfidence = Math.min(1, this.f0s.length / 100);
@@ -74,19 +60,18 @@ export class GenderAnalyzer {
 
     return {
       score,
-      label,
+      label: scoreToLabel(score),
       confidence,
       medianF0: Math.round(median),
       method,
       ...(formants ? { formants } : {}),
+      breakdown: {
+        f0Samples: [...this.f0s],
+        f0Score,
+        ...(formantScore !== undefined ? { formantScore } : {}),
+      },
     };
   }
-}
-
-/** Map F1/F2 to a -1..+1 score (higher formants ⇒ more feminine-typical). */
-function scoreFormants({ f1, f2 }: FormantEstimate): number {
-  const combined = 0.5 * ((f1 - F1_CENTER) / F1_SPREAD) + 0.5 * ((f2 - F2_CENTER) / F2_SPREAD);
-  return Math.tanh(combined);
 }
 
 function percentile(sortedAsc: number[], p: number): number {

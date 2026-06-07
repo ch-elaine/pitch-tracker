@@ -14,6 +14,19 @@ export interface GenderResult {
   method: 'f0' | 'f0+formants';
   /** Median formant frequencies (Hz), present when formant analysis succeeded. */
   formants?: { f1: number; f2: number };
+  /** Underlying data for the transparency graphs. Omitted from persisted records
+   *  (the raw per-frame samples would bloat storage); present for live display. */
+  breakdown?: GenderBreakdown;
+}
+
+/** The raw inputs behind a GenderResult, surfaced for user transparency. */
+export interface GenderBreakdown {
+  /** Every voiced per-frame F0 (Hz) that fed the median. */
+  f0Samples: number[];
+  /** -1..+1 sub-score from pitch alone. */
+  f0Score: number;
+  /** -1..+1 sub-score from formants, when available. */
+  formantScore?: number;
 }
 
 /** A recording persisted in the browser. */

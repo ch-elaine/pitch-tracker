@@ -141,6 +141,38 @@
 
             <p id="gender-formants" class="text-xs opacity-70 empty:hidden"></p>
 
+            <!-- Transparency: the data behind the estimate -->
+            <div id="gender-details" class="collapse collapse-arrow bg-base-200 hidden">
+              <input type="checkbox" aria-label="Toggle calculation details" />
+              <div class="collapse-title text-sm font-medium">How this was calculated</div>
+              <div class="collapse-content flex flex-col gap-4">
+                <div>
+                  <div class="text-xs opacity-70 mb-1">
+                    Pitch distribution — every voiced frame, colored by band (Hz)
+                  </div>
+                  <div class="relative h-32 w-full rounded-box bg-base-100 overflow-hidden">
+                    <canvas id="f0-hist-canvas" class="graph-canvas"></canvas>
+                  </div>
+                </div>
+                <div>
+                  <div class="text-xs opacity-70 mb-1">
+                    Formants F1/F2 vs. typical masculine→feminine ranges
+                  </div>
+                  <div class="relative h-28 w-full rounded-box bg-base-100 overflow-hidden">
+                    <canvas id="formant-canvas" class="graph-canvas"></canvas>
+                  </div>
+                </div>
+                <div>
+                  <div class="text-xs opacity-70 mb-1">
+                    Score breakdown — sub-scores, weights, and the blended result
+                  </div>
+                  <div class="relative h-28 w-full rounded-box bg-base-100 overflow-hidden">
+                    <canvas id="score-canvas" class="graph-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <p class="text-xs opacity-60">
               This estimates acoustic vocal characteristics (pitch/resonance) on a
               feminine–masculine spectrum. It is not a measure of gender identity.

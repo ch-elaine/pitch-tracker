@@ -12,12 +12,13 @@ import type { PitchStabilizer } from '../audio/PitchStabilizer';
 import type { VolumeMeter } from '../audio/VolumeMeter';
 import type { GenderAnalyzer } from '../audio/GenderAnalyzer';
 import type { FormantAnalyzer } from '../audio/FormantAnalyzer';
-import type { Mp3Encode, RecordingStore, StoredRecording } from '../lib/types';
+import type { GenderResult, Mp3Encode, RecordingStore, StoredRecording } from '../lib/types';
 import type { AppState } from './AppState';
 import type { RecorderView } from '../ui/RecorderView';
 import type { PitchGraph } from '../ui/graphs/PitchGraph';
 import type { VolumeGraph } from '../ui/graphs/VolumeGraph';
 import type { GenderGauge } from '../ui/graphs/GenderGauge';
+import type { GenderDetails } from '../ui/graphs/GenderDetails';
 import type { RecordingsList } from '../ui/RecordingsList';
 import { hzToNoteName } from '../lib/notes';
 import { formatRecordingName, toSafeFilename } from '../lib/time';
@@ -37,6 +38,7 @@ export interface RecorderDeps {
   pitchGraph: PitchGraph;
   volumeGraph: VolumeGraph;
   gauge: GenderGauge;
+  details: GenderDetails;
   list: RecordingsList;
   notify: (message: string, kind?: 'info' | 'success' | 'warning' | 'error') => void;
 }
@@ -131,8 +133,13 @@ export class RecorderController {
     // Estimate formants (Tier 2) from the recorded clip, then score the voice.
     const formants = await safe(() => this.d.formant.analyze(result.blob), null);
     const gender = this.d.gender.analyze(formants);
-    if (gender) this.d.gauge.show(gender);
-    else this.d.gauge.showInsufficient();
+    if (gender) {
+      this.d.gauge.show(gender);
+      this.d.details.show(gender);
+    } else {
+      this.d.gauge.showInsufficient();
+      this.d.details.hide();
+    }
 
     const recording: StoredRecording = {
       id: crypto.randomUUID(),
@@ -141,7 +148,9 @@ export class RecorderController {
       blob: result.blob,
       mimeType: result.mimeType,
       durationMs: result.durationMs,
-      ...(gender ? { gender } : {}),
+      // Persist only the summary — the breakdown's raw per-frame samples would
+      // bloat storage and are only needed for the live transparency panel.
+      ...(gender ? { gender: stripBreakdown(gender) } : {}),
     };
 
     try {
@@ -185,6 +194,7 @@ export class RecorderController {
     this.d.pitchGraph.clear();
     this.d.volumeGraph.clear();
     this.d.gauge.hide();
+    this.d.details.hide();
     this.d.view.resetLive();
   }
 
@@ -201,6 +211,12 @@ export class RecorderController {
     this.d.view.setState('idle');
     this.d.state.set('idle');
   }
+}
+
+/** Drop the transparency breakdown (raw samples) before persisting a result. */
+function stripBreakdown(gender: GenderResult): GenderResult {
+  const { breakdown: _breakdown, ...summary } = gender;
+  return summary;
 }
 
 /** Run an async producer, returning a fallback if it throws (e.g. DB blocked). */

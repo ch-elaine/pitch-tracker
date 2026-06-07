@@ -7,7 +7,12 @@ export class ResponsiveCanvas {
   private cssWidth = 0;
   private cssHeight = 0;
 
-  constructor(private readonly canvas: HTMLCanvasElement) {
+  /** @param onResize optional redraw hook, fired after the backing store resizes
+   *  (e.g. when a collapsed panel becomes visible). */
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly onResize?: () => void,
+  ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas context is not available');
     this.ctx = ctx;
@@ -40,5 +45,6 @@ export class ResponsiveCanvas {
     this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
     this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS-pixel coordinates
+    this.onResize?.();
   }
 }

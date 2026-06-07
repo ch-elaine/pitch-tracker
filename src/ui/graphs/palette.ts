@@ -6,6 +6,9 @@ interface Colors {
   primary: string;
   baseContent: string;
   error: string;
+  info: string;
+  secondary: string;
+  accent: string;
   grid: string;
 }
 
@@ -13,6 +16,9 @@ const FALLBACK: Colors = {
   primary: '#570df8',
   baseContent: '#1f2937',
   error: '#ef4444',
+  info: '#0ea5e9',
+  secondary: '#f000b8',
+  accent: '#37cdbe',
   grid: 'rgba(128,128,128,0.18)',
 };
 
@@ -38,6 +44,9 @@ export class Palette {
       primary: read('--color-primary', FALLBACK.primary),
       baseContent: read('--color-base-content', FALLBACK.baseContent),
       error: read('--color-error', FALLBACK.error),
+      info: read('--color-info', FALLBACK.info),
+      secondary: read('--color-secondary', FALLBACK.secondary),
+      accent: read('--color-accent', FALLBACK.accent),
       grid: FALLBACK.grid,
     };
   }

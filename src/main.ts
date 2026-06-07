@@ -26,6 +26,7 @@ import { Palette } from './ui/graphs/palette';
 import { PitchGraph } from './ui/graphs/PitchGraph';
 import { VolumeGraph } from './ui/graphs/VolumeGraph';
 import { GenderGauge } from './ui/graphs/GenderGauge';
+import { GenderDetails } from './ui/graphs/GenderDetails';
 
 function bootstrap(): void {
   initThemeToggle();
@@ -56,6 +57,7 @@ function bootstrap(): void {
     pitchGraph: new PitchGraph(byId<HTMLCanvasElement>('pitch-canvas'), palette),
     volumeGraph: new VolumeGraph(byId<HTMLCanvasElement>('volume-canvas'), palette),
     gauge: new GenderGauge(),
+    details: new GenderDetails(palette),
     list,
     notify: showAlert,
   });
