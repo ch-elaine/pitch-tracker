@@ -8,6 +8,7 @@
 import type { AudioCapture } from '../audio/AudioCapture';
 import { CaptureError } from '../audio/AudioCapture';
 import type { PitchDetector } from '../audio/PitchDetector';
+import type { PitchStabilizer } from '../audio/PitchStabilizer';
 import type { VolumeMeter } from '../audio/VolumeMeter';
 import type { GenderAnalyzer } from '../audio/GenderAnalyzer';
 import type { Mp3Encode, RecordingStore, StoredRecording } from '../lib/types';
@@ -24,6 +25,7 @@ import { downloadBlob } from '../lib/download';
 export interface RecorderDeps {
   capture: AudioCapture;
   pitch: PitchDetector;
+  stabilizer: PitchStabilizer;
   volume: VolumeMeter;
   gender: GenderAnalyzer;
   store: RecordingStore;
@@ -37,9 +39,14 @@ export interface RecorderDeps {
   notify: (message: string, kind?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
+/** How often the numeric readouts refresh (ms). The graphs render every frame;
+ *  the text updates slower so the digits are readable instead of strobing. */
+const STAT_UPDATE_MS = 100;
+
 export class RecorderController {
   private rafId = 0;
   private startedAt = new Date();
+  private lastStatAt = 0;
 
   constructor(private readonly d: RecorderDeps) {}
 
@@ -78,18 +85,27 @@ export class RecorderController {
     const frame = this.d.capture.readFrame();
     const sampleRate = this.d.capture.sampleRate;
 
-    const hz = this.d.pitch.detect(frame, sampleRate);
+    const rawHz = this.d.pitch.detect(frame, sampleRate);
+    const hz = this.d.stabilizer.push(rawHz); // smoothed + gap-bridged for display
     const vol = this.d.volume.measure(frame);
 
-    this.d.gender.collect(hz);
+    // Gender uses the RAW stream so held/duplicated values don't bias the median.
+    this.d.gender.collect(rawHz);
+
+    // Graphs render every frame for smoothness, on the stabilized pitch.
     this.d.pitchGraph.push(hz);
     this.d.volumeGraph.push(vol.db);
     this.d.pitchGraph.render();
     this.d.volumeGraph.render();
 
-    this.d.view.updateTime(this.d.capture.elapsedMs());
-    this.d.view.updatePitch(hz, hz === null ? null : hzToNoteName(hz));
-    this.d.view.updateVolume(vol.db, vol.percent, vol.clipping);
+    // Numeric readouts refresh on a slower cadence so the digits stay readable.
+    const now = this.d.capture.elapsedMs();
+    if (now - this.lastStatAt >= STAT_UPDATE_MS) {
+      this.lastStatAt = now;
+      this.d.view.updateTime(now);
+      this.d.view.updatePitch(hz, hz === null ? null : hzToNoteName(hz));
+      this.d.view.updateVolume(vol.db, vol.percent, vol.clipping);
+    }
 
     this.rafId = requestAnimationFrame(this.loop);
   };
@@ -159,7 +175,9 @@ export class RecorderController {
   }
 
   private resetForNewTake(): void {
+    this.lastStatAt = 0;
     this.d.gender.reset();
+    this.d.stabilizer.reset();
     this.d.volume.reset();
     this.d.pitchGraph.clear();
     this.d.volumeGraph.clear();

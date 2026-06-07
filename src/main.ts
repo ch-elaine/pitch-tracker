@@ -13,6 +13,7 @@ import { RecorderController } from './app/RecorderController';
 
 import { AudioCapture } from './audio/AudioCapture';
 import { PitchDetector } from './audio/PitchDetector';
+import { PitchStabilizer } from './audio/PitchStabilizer';
 import { VolumeMeter } from './audio/VolumeMeter';
 import { GenderAnalyzer } from './audio/GenderAnalyzer';
 import { encodeToMp3 } from './audio/Mp3Encoder';
@@ -43,6 +44,7 @@ function bootstrap(): void {
   const controller: RecorderController = new RecorderController({
     capture,
     pitch: new PitchDetector(capture.fftSize),
+    stabilizer: new PitchStabilizer(),
     volume: new VolumeMeter(),
     gender: new GenderAnalyzer(),
     store: new IndexedDbRecordingStore(),

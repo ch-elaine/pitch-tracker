@@ -70,9 +70,11 @@ export class RecordingsList {
     this.objectUrls.push(url);
     const audio = document.createElement('audio');
     audio.controls = true;
-    audio.preload = 'none';
+    // 'metadata' so the duration fix runs before the user hits play.
+    audio.preload = 'metadata';
     audio.src = url;
     audio.className = 'w-full h-9';
+    fixSeekableDuration(audio);
     body.appendChild(audio);
 
     // Actions.
@@ -121,4 +123,23 @@ export class RecordingsList {
     for (const url of this.objectUrls) URL.revokeObjectURL(url);
     this.objectUrls = [];
   }
+}
+
+/** MediaRecorder WebM/Opus blobs report `duration: Infinity`, which breaks the
+ *  native seek bar. Forcing a seek to the end makes the browser compute the real
+ *  duration; we then reset to the start. Standard workaround. */
+function fixSeekableDuration(audio: HTMLAudioElement): void {
+  audio.addEventListener(
+    'loadedmetadata',
+    () => {
+      if (Number.isFinite(audio.duration)) return;
+      const onUpdate = (): void => {
+        audio.removeEventListener('timeupdate', onUpdate);
+        audio.currentTime = 0;
+      };
+      audio.addEventListener('timeupdate', onUpdate);
+      audio.currentTime = 1e7; // clamped by the browser to the true end
+    },
+    { once: true },
+  );
 }

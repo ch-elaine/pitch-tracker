@@ -73,6 +73,19 @@ All notable changes are documented here. Format based on
 
 ### [Unreleased]
 
+#### Changed
+- **2026-06-07** — Stabilized the live readouts. Added `PitchStabilizer` (median
+  over a short rolling window + a ~200ms "hold" that bridges natural breaths/
+  pauses so the pitch no longer blanks mid-speech), and throttled the numeric
+  Time/Pitch/Volume readouts to ~10 Hz so the digits stay readable while the
+  graphs keep rendering every frame. Gender analysis still consumes the raw
+  pitch stream so held values don't bias its median.
+
+#### Fixed
+- **2026-06-07** — Recording playback seek bar. `MediaRecorder` WebM/Opus blobs
+  report `duration: Infinity`, breaking the native `<audio>` progress bar; the
+  list now forces the browser to compute the real duration on metadata load.
+
 #### Added
 - **2026-06-07** — Recording & analysis functionality (the full audio pipeline).
   - `AudioCapture`: `getUserMedia` (echo-cancel/noise-suppress/AGC disabled for
