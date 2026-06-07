@@ -1,0 +1,20 @@
+{
+  "name": "pitch-tracker",
+  "version": "0.1.0",
+  "description": "Fully client-side pitch & volume detection with in-browser recording, MP3 export, and voice-spectrum analysis.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "daisyui": "^5.5.23",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vite": "^7.3.5"
+  }
+}

@@ -74,6 +74,19 @@ All notable changes are documented here. Format based on
 ### [Unreleased]
 
 #### Added
+- **2026-06-07** — UI shell, build tooling & deployment.
+  - Vite + TypeScript (strict) project scaffold with TailwindCSS 4 + DaisyUI 5
+    (CSS-based config, light/dark themes).
+  - Responsive (mobile/desktop) UI shell built from DaisyUI components: navbar
+    with dark-mode `theme-controller`, recorder panel with record button + live
+    `stat` readouts (time/pitch/volume), pitch & volume graph cards (canvas
+    placeholders), volume `radial-progress` meter, voice-character spectrum card
+    with disclaimer, and a sticky recordings list with empty state.
+  - View modules following the architecture skill (`RecorderView`, theme, alerts,
+    DOM/time helpers incl. the `dd.mm.yyyy-hh:mm:ss` name formatter).
+  - GitHub Actions workflow (`.github/workflows/deploy.yml`) building to `dist/`
+    and publishing via the Pages artifact flow; `vite.config.ts` switches the
+    `base` path to `/<repo>/` under CI.
 - **2026-06-07** — Project design & skills scaffolding. Added eight SKILL playbooks
   under `.claude/skills/` (architecture, audio capture, pitch detection, volume
   detection, voice gender analysis, audio storage + MP3 export, DaisyUI/responsive
@@ -81,8 +94,8 @@ All notable changes are documented here. Format based on
   requirements.
 
 #### Planned
-- Vite + TypeScript + Tailwind/DaisyUI app scaffold.
-- Recording flow with live pitch + volume graphs.
-- Post-recording gender spectrum gauge.
+- Audio capture (`getUserMedia` + Web Audio graph + MediaRecorder) replacing the
+  placeholder recorder stub.
+- Live pitch + volume graph rendering on the canvases.
+- Post-recording gender spectrum analysis feeding the voice-character card.
 - IndexedDB recordings list with MP3 download (`dd.mm.yyyy-hh:mm:ss` naming).
-- GitHub Pages deployment workflow.
